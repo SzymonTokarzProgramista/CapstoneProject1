@@ -1,0 +1,7 @@
+*.asv
+slprj/
+*.rxw64
+*.autosave
+*_sldrt_win64/
+*.slxc
+*.slx.original

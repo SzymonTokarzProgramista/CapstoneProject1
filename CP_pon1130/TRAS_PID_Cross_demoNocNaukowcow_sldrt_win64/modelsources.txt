@@ -1,2 +1,0 @@
-    TRAS_PID_Cross_demoNocNaukowcow.c
-
