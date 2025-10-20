@@ -65,7 +65,7 @@ eqn_clean = subs(eqn, ...
     abs(diff(theta_p(t),t))*diff(theta_p(t),t));
 eqn_clean = simplify(eqn_clean);
 figure;
-text(0.1,0.5,"$" + latex(eqn_clean) + "$",'Interpreter','latex')
+text(0.1,0.5,"$" + latex(eqn_clean) + "$",'Interpreter', 'latex')
 
 % Save eqn_clean in a file named pendulum_equation
 save('pendulum_equation.mat', 'eqn_clean');
