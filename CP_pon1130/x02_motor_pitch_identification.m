@@ -59,3 +59,19 @@ compare(data, sys);
 
 numerator = sys.Numerator
 denominator = sys.Denominator
+
+
+%%
+sys
+% G(s) = K / Ts + 1
+% Ty' + y = Ku
+% y' = K/T u - y/T y to jest omega u to control
+
+numerator = numerator / denominator(2)
+denominator = denominator / denominator(2)
+
+K = numerator;
+T = denominator(1);
+
+save("motor_1st_order.mat", "T", "K", "sys");
+

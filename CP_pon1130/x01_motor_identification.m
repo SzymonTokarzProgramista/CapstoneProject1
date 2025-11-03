@@ -13,10 +13,10 @@ control =           [-.77  -.57  -.37   0   .19  0.27  0.34    .44 .48    0.54  
 RPM =               [-2860  -2420  -1850   0   1160 1505  1750    2068 2185   2350   2660   2950 3180 3340 ]
 % encoder =           [0.8]
 
-thrust_g = hanging_masses - hanging_masses(1); // pay attention here
+thrust_g = hanging_masses - hanging_masses(4); % pay attention here
 thrust_N = thrust_g * 9.81 / 1000;
 
-x = linspace(0,3500,100);
+x = linspace(-3500,3500,100);
 
 % % Polynomial fit
 % poly = polyfit(RPM, thrust_N, 3);
@@ -27,15 +27,16 @@ ftype = fittype('a + b*x + c*x^2 + d*x^3', 'independent', 'x');
 poly = fit(RPM(:), thrust_N(:), ftype, 'StartPoint', [1e-6, 2 0 0]);
 y_poly = poly.a + poly.b*x + poly.c*x.^2 + poly.d*x.^3;
 % Exponential fit
-ftype = fittype('k * x^n', 'independent', 'x');
-expo = fit(RPM(:), thrust_N(:), ftype, 'StartPoint', [1e-6, 1]);
-y_expo = expo.k*x.*expo.n;
+% ftype = fittype('k * x^n', 'independent', 'x');
+% expo = fit(RPM(:), thrust_N(:), ftype, 'StartPoint', [1e-6, 1]);
+% y_expo = expo.k*x.*expo.n;
 
 figure;
-plot(RPM, thrust_N, 'o', x, y_poly, '-', x, y_expo, '--' );
+plot(RPM, thrust_N, 'o', x, y_poly, '-') %, x, y_expo, '--' );
 xlabel('RPM'); ylabel('Thrust [N]');
 legend('Data', 'Fitted curve');
 
+save("thrust_in_function_of_rpm_polynomial", "poly")
 
 %% Motor dynamical response fitting
 % Our input is the setpoint with range u [-1, 1]

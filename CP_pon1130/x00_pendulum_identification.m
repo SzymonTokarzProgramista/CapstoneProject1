@@ -28,6 +28,7 @@ angle_balanced = mean(angle(4000:5000));
 
 % Rownowaga dla 28 gram
 
+
 %% Free swinging pendulum identification
 angle_swinging = angle(1223:4223) - angle_balanced;
 time_swinging = time(1223:4223);
@@ -58,6 +59,11 @@ theta0 = angle_swinging(1);
 omega0 = omega_swinging(1);
 x0 = [theta0; omega0];
 
+% 0.25 to odleglosc osi yaw motoru
+% 0.28 to masa
+% T = 2*pi*sqrt(moment / g * 0.25*0.028)
+moment_bezwladnosci_calosci = (T / (2*pi))^2 * 9.81 * 0.25 * .028;
+
 
 %% Load the eqn
 load("pendulum_equation.mat")
@@ -68,7 +74,29 @@ syms tau omega_r theta_p(t)
 
 eqn_free_swinging = isolate(subs(eqn_clean, [tau, omega_r], [0, 0]), diff(theta_p, 2))
 figure;
-text(0.1,0.5,"$" + latex(eqn_free_swinging) + "$",'Interpreter','latex')
+text(0.1,0.5,"$" + latex(eqn_free_swinging) + "$",'Interpreter','latex','FontSize',14)
+
+
+%% Optymalizacja parametrow
+% p0 = [0.002, 0.0005, 0.001, 0.02, 0.03, 0.06];  % [Jp Jr b c m D]
+p0 = [0.001, 0.02, 0.03, 0.06];  % [b c m D]
+
+x0 = [angle_swinging(1); 0];
+best_p = fminsearch(@(p) costfun(p, time_swinging, angle_swinging, x0), p0);
+
+params = struct('Jp',moment_bezwladnosci_calosci,'Jr',0, ...
+                'b',best_p(1),'c',best_p(2),'m',best_p(3),'D',best_p(4));
+
+
+[t_sim, x_sim] = ode45(@(t,x) pendulum_model(t,x,params), time_swinging, x0);
+
+save("pendulum_parameters.mat", "params");
+
+figure;
+plot(time_swinging, angle_swinging, 'k', 'DisplayName', 'Measured');
+hold on;
+plot(t_sim, x_sim(:,1), 'r--', 'DisplayName', 'Simulated');
+legend; xlabel('Time [s]'); ylabel('\theta [rad]');
 
 %% Fit the model to the equation
 function dx = pendulum_model(t, x, params)
@@ -89,12 +117,19 @@ function dx = pendulum_model(t, x, params)
 end
 
 function err = costfun(p, time, angle_meas, x0)
-    params.Jp = p(1);
-    params.Jr = p(2);
-    params.b  = p(3);
-    params.c  = p(4);
-    params.m  = p(5);
-    params.D  = p(6);
+%     params.Jp = p(1);
+%     params.Jr = p(2);
+%     params.b  = p(3);
+%     params.c  = p(4);
+%     params.m  = p(5);
+%     params.D  = p(6);
+
+    params.Jp = 0.010973149964911; % moment_bezwladnosci_calosci
+    params.Jr = 0;
+    params.b  = p(1);
+    params.c  = p(2);
+    params.m  = p(3);
+    params.D  = p(4);
 
     [~, x] = ode45(@(t,x) pendulum_model(t,x,params), time, x0);
     theta_sim = x(:,1);
@@ -103,20 +138,5 @@ function err = costfun(p, time, angle_meas, x0)
     err = sum((theta_sim - angle_meas).^2);
 end
 
-p0 = [0.002, 0.0005, 0.001, 0.02, 0.03, 0.06];  % [Jp Jr b c m D]
 
-x0 = [angle_swinging(1); 0];
-best_p = fminsearch(@(p) costfun(p, time_swinging, angle_swinging, x0), p0);
-
-% Validate
-params = struct('Jp',best_p(1),'Jr',best_p(2), ...
-                'b',best_p(3),'c',best_p(4),'m',best_p(5),'D',best_p(6));
-
-[t_sim, x_sim] = ode45(@(t,x) pendulum_model(t,x,params), time_swinging, x0);
-
-figure;
-plot(time_swinging, angle_swinging, 'k', 'DisplayName', 'Measured');
-hold on;
-plot(t_sim, x_sim(:,1), 'r--', 'DisplayName', 'Simulated');
-legend; xlabel('Time [s]'); ylabel('\theta [rad]');
 
