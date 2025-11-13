@@ -23,9 +23,12 @@ x = linspace(-3500,3500,100);
 % y_poly = polyval(poly, x);
 
 % Polynomial fit 
-ftype = fittype('a + b*x + c*x^2 + d*x^3', 'independent', 'x');
-poly = fit(RPM(:), thrust_N(:), ftype, 'StartPoint', [1e-6, 2 0 0]);
-y_poly = poly.a + poly.b*x + poly.c*x.^2 + poly.d*x.^3;
+% ftype = fittype('a + b*x + c*x^2 + d*x^3', 'independent', 'x');
+ftype = fittype('b*x + c*x^2 + d*x^3', 'independent', 'x');
+% poly = fit(RPM(:), thrust_N(:), ftype, 'StartPoint', [1e-6, 2 0 0]);
+poly = fit(RPM(:), thrust_N(:), ftype, 'StartPoint', [2 0 0]);
+% y_poly = poly.a + poly.b*x + poly.c*x.^2 + poly.d*x.^3;
+y_poly = poly.b*x + poly.c*x.^2 + poly.d*x.^3;
 % Exponential fit
 % ftype = fittype('k * x^n', 'independent', 'x');
 % expo = fit(RPM(:), thrust_N(:), ftype, 'StartPoint', [1e-6, 1]);
