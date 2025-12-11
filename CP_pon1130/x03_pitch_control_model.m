@@ -148,7 +148,7 @@ load("pendulum_parameters.mat");
 load("thrust_in_function_of_rpm_polynomial.mat");  % wczyta 'poly'
 
 % Parametry
-theta_p_setpoint = 0.2;  % [rad]
+theta_p_setpoint = 0.8;  % [rad]
 g = 9.81;
 r_p = 0.235;
 
@@ -189,8 +189,9 @@ disp('Rank of C = '); disp(rank(C))
 
 %% Actually compute the K matrix (LQR)
 
-Q = diag([10, 1, 0.00001]);  % większy nacisk na x1
-R = 2;
+Q = diag([1000, .01, 0.0000001]);
+% Q = diag([1000, 1, 0.0000001]);  % większy nacisk na x1
+R = 10;
 
 K = lqr(double(A), double(B), Q, R);
 disp('K = '); disp(double(K))
@@ -211,7 +212,7 @@ odefun_lqr = @(t, x) f(t, x, u_sat(u_ref - K*(x - x_ref)));
 
 % Sterowanie w czasie symulacji
 u_lqr_sim = -((K*(x_sim.' - x_ref)).');   % zamiana na wiersze
-u_lqr_sim_abs = u_ref + (-K*(x_sim.' - x_ref)).';
+u_lqr_sim_abs = u_sat(u_ref + (-K*(x_sim.' - x_ref)).');
 
 % Wykres 4 subplotów
 figure;
@@ -237,15 +238,18 @@ ylabel('u(t)'); xlabel('Time [s]'); grid on
 
 sgtitle('LQR Closed-Loop Simulation')
 
-%%
-% % 
-% % TODO 
-% % 
-% % zasymulowac rownania i zobaczyc co sie dzieje
-% % 
-% % ten uklad eqn_motor i eqn_xd
-% % 
-% % 
-% % digitsOld = digits(2);
-% % figure;
-% % text(0.1,0.5,"$" + latex(vpa(isolate(eqn_xd, diff(theta_p,2)))) + "$",'Interpreter','latex','FontSize',24)
+%% LQI
+
+An = double(A);
+Bn = double(B);
+Be = [Bn; 0];
+Ae = [An, [0;0;0]; 1 0 0 0];
+
+Qe = diag([1000, .01, 0.0000001, 100]);
+% Q = diag([1000, 1, 0.0000001]);  % większy nacisk na x1
+Re = 10;
+
+K = lqr(Ae, Be, Qe, Re);
+disp('K = '); disp(double(K))
+
+disp('eig(A-BK) = '); disp(eig(double(Ae - Be*K)))
